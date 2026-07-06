@@ -24,18 +24,31 @@ async function migrate() {
         // Gunakan database tersebut
         await connection.query(`USE \`${dbName}\``);
         
-        // Baca file absen.sql
-        const sqlFilePath = path.join(__dirname, '..', 'absen.sql');
-        if (!fs.existsSync(sqlFilePath)) {
-            console.error(`File SQL tidak ditemukan di path: ${sqlFilePath}`);
+        // Jalankan file-file migrasi
+        const migrationsDir = path.join(__dirname, 'migrations');
+        if (!fs.existsSync(migrationsDir)) {
+            console.error(`Folder migrations tidak ditemukan di path: ${migrationsDir}`);
             process.exit(1);
         }
         
-        const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
-        
-        console.log('Mengeksekusi file SQL...');
-        // Eksekusi semua query dalam file SQL
-        await connection.query(sqlContent);
+        const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+        if (files.length === 0) {
+            console.log('Tidak ada file migrasi (.sql) ditemukan.');
+        } else {
+            console.log(`Menemukan ${files.length} file migrasi. Menjalankan secara berurutan...`);
+            for (const file of files) {
+                const filePath = path.join(migrationsDir, file);
+                console.log(`-> Mengeksekusi ${file}...`);
+                const sqlContent = fs.readFileSync(filePath, 'utf8');
+                try {
+                    await connection.query(sqlContent);
+                    console.log(`   Berhasil mengeksekusi ${file}`);
+                } catch (err) {
+                    console.error(`   Gagal mengeksekusi ${file}:`, err.message);
+                    throw err; // Stop migration on error
+                }
+            }
+        }
         
         console.log('Migrasi database berhasil diselesaikan!');
         await connection.end();

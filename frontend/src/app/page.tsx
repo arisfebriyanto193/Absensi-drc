@@ -45,29 +45,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="animated-bg min-h-screen flex-center relative overflow-hidden">
-      <div 
-        style={{
-          position: "absolute", top: "10%", left: "10%", width: "300px", height: "300px",
-          background: "rgba(255,255,255,0.1)", borderRadius: "50%", filter: "blur(60px)"
-        }}
-      />
-      <div 
-        style={{
-          position: "absolute", bottom: "10%", right: "10%", width: "400px", height: "400px",
-          background: "rgba(118,75,162,0.15)", borderRadius: "50%", filter: "blur(80px)"
-        }}
-      />
-      
-      <div className="login-container glass-card fade-in">
-        <div className="login-icon">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
+    <div className="min-h-screen flex-center relative" style={{ backgroundColor: "var(--bg-color)" }}>
+      <div className="login-container surface-card fade-in">
         
         <div style={{ textAlign: "center", marginBottom: "30px" }}>
-          <h1 className="text-gradient" style={{ fontSize: "2rem", marginBottom: "8px" }}>Sistem Absensi Piket</h1>
+          <h1 style={{ fontSize: "1.75rem", marginBottom: "8px", color: "var(--text-main)" }}>Sistem Absensi Piket</h1>
           <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>Silakan login untuk melanjutkan</p>
         </div>
 
@@ -104,7 +86,16 @@ export default function LoginPage() {
             />
           </div>
           
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: "10px" }}>
+          <button 
+            type="submit" 
+            className="btn btn-block" 
+            disabled={loading} 
+            style={{ 
+              marginTop: "10px", 
+              backgroundColor: "var(--text-main)", 
+              color: "white" 
+            }}
+          >
             {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>

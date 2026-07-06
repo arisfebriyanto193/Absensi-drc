@@ -1,0 +1,6 @@
+DB_HOST=localhost
+DB_USER=DB_USER
+DB_PASSWORD=DB_PASSWORD
+PORT=5000
+JWT_SECRET=supersecret_absen_key_2025
+DB_NAME=absen

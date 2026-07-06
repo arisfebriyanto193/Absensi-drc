@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice Generator Tailwind</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
+    <h2 class="text-3xl font-bold mb-6 text-gray-700">Invoice / Nota Generator</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <div>
+        <h3 class="font-semibold text-lg mb-2">Perusahaan</h3>
+        <input id="cName" class="input" placeholder="Nama perusahaan" value="My Company" />
+        <input id="cAddr" class="input" placeholder="Alamat" value="Jl. Contoh No.1" />
+        <input id="cPhone" class="input" placeholder="Telepon" value="081234567890" />
+
+        <label class="block mt-4 font-semibold">Upload Logo:</label>
+        <input type="file" accept="image/*" onchange="loadLogo(event)" class="mt-2" />
+      </div>
+
+      <div>
+        <h3 class="font-semibold text-lg mb-2">Pelanggan & Invoice</h3>
+        <input id="pName" class="input" placeholder="Nama Pelanggan" value="Nama pelanggan" />
+        <input id="pAddr" class="input" placeholder="Alamat" value="Alamat pelanggan" />
+        <input id="invNum" class="input" placeholder="Nomor Invoice" value="INV-001" />
+        <input type="date" id="invDate" class="input" value="2025-01-01" />
+      </div>
+
+    </div>
+
+    <h3 class="font-semibold text-lg mt-6 mb-2">Item</h3>
+    <table class="w-full text-left border-t" id="itemTable">
+      <thead>
+        <tr class="border-b bg-gray-50">
+          <th class="p-2">Deskripsi</th>
+          <th class="p-2">Qty</th>
+          <th class="p-2">Harga</th>
+          <th class="p-2">Jumlah</th>
+          <th class="p-2">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="itemBody"></tbody>
+    </table>
+    <button onclick="addItem()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded">Tambah Item</button>
+
+
+    <h3 class="font-semibold text-lg mt-6 mb-2">Catatan</h3>
+    <textarea id="notes" rows="3" class="input">Terima kasih atas pesanan Anda.</textarea>
+
+    <button onclick="downloadPDF()" class="mt-4 bg-green-600 text-white px-5 py-2 rounded">Download PDF</button>
+
+    <h3 class="font-semibold text-lg mt-8 mb-2">Preview Invoice</h3>
+    <div id="invoice" class="p-6 rounded-xl shadow bg-white"></div>
+  </div>
+
+<style>
+.input { @apply w-full p-2 border rounded mt-1 mb-2; }
+</style>
+
+<script>
+let logoData = "";
+let items = [
+  { desc: "Produk A", qty: 1, price: 100000 },
+  { desc: "Produk B", qty: 2, price: 50000 }
+]
+
+function loadLogo(event) {
+  const reader = new FileReader();
+  reader.onload = function(e) { 
+    logoData = e.target.result; 
+    renderInvoice(); 
+  };
+  reader.readAsDataURL(event.target.files[0]);
+}
+
+function renderItems() {
+  const body = document.getElementById("itemBody")
+  body.innerHTML = ""
+  items.forEach((it, i) => {
+    const row = document.createElement("tr")
+    row.className = "border-b"
+    row.innerHTML = `
+      <td class='p-2'><input class='input' value="${it.desc}" onchange="updateItem(${i}, 'desc', this.value)"></td>
+      <td class='p-2'><input class='input' type="number" value="${it.qty}" onchange="updateItem(${i}, 'qty', this.value)"></td>
+      <td class='p-2'><input class='input' type="number" value="${it.price}" onchange="updateItem(${i}, 'price', this.value)"></td>
+      <td class='p-2'>Rp ${(it.qty * it.price).toLocaleString('id-ID')}</td>
+      <td class='p-2'><button onclick="removeItem(${i})" class="bg-red-500 text-white px-2 py-1 rounded">X</button></td>`
+    body.appendChild(row)
+  })
+  renderInvoice()
+}
+
+function addItem() { items.push({ desc: "Item baru", qty: 1, price: 0 }); renderItems(); }
+function updateItem(i, key, val) { items[i][key] = key==='desc'?val:Number(val); renderItems(); }
+function removeItem(i) { items.splice(i,1); renderItems(); }
+
+function renderInvoice() {
+  const subtotal = items.reduce((s, it) => s + it.qty * it.price, 0)
+  const total = subtotal
+
+  document.getElementById("invoice").innerHTML = `
+    <div class="relative p-6 bg-white">
+      ${logoData ? `
+        <div class="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none">
+          <img src="${logoData}" class="max-w-full max-h-full object-contain" />
+        </div>
+      ` : ''}
+      
+      <div class="relative z-10">
+        <div class="flex items-center gap-4 mb-6">
+          <div>
+            <h2 class='text-xl font-bold text-gray-700'>${document.getElementById('cName').value}</h2>
+            <p>${document.getElementById('cAddr').value}</p>
+            <p>${document.getElementById('cPhone').value}</p>
+          </div>
+        </div>
+
+        <hr class='my-4'>
+
+        <div class="flex justify-between">
+          <div>
+            <h3 class='font-bold text-lg'>INVOICE</h3>
+            <p>No: ${document.getElementById('invNum').value}</p>
+            <p>Tanggal: ${document.getElementById('invDate').value}</p>
+          </div>
+          
+          <div>
+            <h3 class='font-bold'>Bill To:</h3>
+            <p>${document.getElementById('pName').value}</p>
+            <p>${document.getElementById('pAddr').value}</p>
+          </div>
+        </div>
+
+        <table class='w-full mt-6'>
+          <tr class='border-b font-semibold bg-gray-50'>
+            <th class='p-2 text-left'>Deskripsi</th>
+            <th class='p-2 text-right'>Qty</th>
+            <th class='p-2 text-right'>Harga</th>
+            <th class='p-2 text-right'>Jumlah</th>
+          </tr>
+          ${items.map(it => `
+            <tr class='border-b'>
+              <td class='p-2'>${it.desc}</td>
+              <td class='p-2 text-right'>${it.qty}</td>
+              <td class='p-2 text-right'>Rp ${it.price.toLocaleString('id-ID')}</td>
+              <td class='p-2 text-right'>Rp ${(it.qty * it.price).toLocaleString('id-ID')}</td>
+            </tr>`).join('')}
+        </table>
+
+        <div class='text-right mt-6 text-lg'>
+          <p>Subtotal: Rp ${subtotal.toLocaleString('id-ID')}</p>
+          <p class='font-bold text-2xl mt-2'>Total: Rp ${total.toLocaleString('id-ID')}</p>
+        </div>
+
+        <p class='mt-6 text-gray-600'>${document.getElementById('notes').value}</p>
+      </div>
+    </div>
+  `
+}
+
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf
+  const inv = document.getElementById("invoice")
+  const canvas = await html2canvas(inv, { scale: 2 })
+  const img = canvas.toDataURL("image/png")
+  const pdf = new jsPDF("p","mm","a4")
+  const w = pdf.internal.pageSize.getWidth()
+  const h = (canvas.height * w) / canvas.width
+  pdf.addImage(img,"PNG",0,0,w,h)
+  pdf.save(document.getElementById('invNum').value+".pdf")
+}
+
+renderItems()
+</script>
+</body>
+</html>

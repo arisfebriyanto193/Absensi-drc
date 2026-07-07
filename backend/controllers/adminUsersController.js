@@ -44,18 +44,14 @@ exports.deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
         
-        const [[{ absensi_count }]] = await pool.query('SELECT COUNT(*) as absensi_count FROM absensi WHERE user_id = ?', [id]);
-        if (absensi_count > 0) {
-            return res.status(400).json({ message: 'User tidak dapat dihapus karena sudah memiliki data absensi' });
-        }
+        // Hapus manual log email karena tidak menggunakan ON DELETE CASCADE
+        await pool.query('DELETE FROM email_log WHERE user_id = ?', [id]);
 
-        const [[{ izin_count }]] = await pool.query('SELECT COUNT(*) as izin_count FROM izin WHERE user_id = ?', [id]);
-        if (izin_count > 0) {
-            return res.status(400).json({ message: 'User tidak dapat dihapus karena sudah memiliki data izin' });
-        }
-
+        // Hapus user. Tabel jadwal_piket, absensi, izin, dll akan ikut terhapus
+        // secara otomatis berkat constraint ON DELETE CASCADE di database.
         await pool.query('DELETE FROM users WHERE id = ?', [id]);
-        res.json({ message: 'User berhasil dihapus' });
+        
+        res.json({ message: 'User dan seluruh data terkait (jadwal, riwayat) berhasil dihapus' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });

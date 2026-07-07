@@ -4,36 +4,72 @@ const jwt = require('jsonwebtoken');
 
 exports.login = async (req, res) => {
     try {
-        const { username, password } = req.body;
-        console.log(username, password)
+        const { username, password, loginMethod = 'drc' } = req.body;
         if (!username || !password) {
             return res.status(400).json({ message: 'Username dan password harus diisi' });
         }
 
-        const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role FROM users WHERE username = ? OR nim = ?', [username, username]);
+        let user = null;
+        let isMatch = false;
+        let isSiadinSuccess = false;
 
-        if (rows.length === 0) {
-            return res.status(401).json({ message: 'Username/NIM atau password salah' });
-        }
+        if (loginMethod === 'siadin') {
+            // Opsi 1: Login via API SIADIN
+            try {
+                const siadinResponse = await fetch('https://api.dinus.ac.id/api/v1/siadin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
 
-        const user = rows[0];
-        const isMatch = await bcrypt.compare(password, user.password);
+                const siadinData = await siadinResponse.json();
+                
+                if (siadinResponse.ok && siadinData.message === 'Success') {
+                    // SIADIN sukses, cek apakah terdaftar di database DRC
+                    const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role, nim FROM users WHERE username = ? OR nim = ?', [username, username]);
+                    
+                    if (rows.length === 0) {
+                        return res.status(401).json({ message: 'Bukan anggota DRC' });
+                    }
+                    
+                    user = rows[0];
+                    isMatch = true;
+                    isSiadinSuccess = true;
+                } else {
+                    return res.status(401).json({ message: 'Login SIADIN gagal. Pastikan username dan password benar.' });
+                }
+            } catch (siadinErr) {
+                console.error('Error saat menghubungi API SIADIN:', siadinErr.message);
+                return res.status(500).json({ message: 'Server SIADIN tidak merespons, silakan coba login dengan akun lokal.' });
+            }
+        } else {
+            // Opsi 2: Login via Akun DRC (Lokal)
+            const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role, nim FROM users WHERE username = ? OR nim = ?', [username, username]);
 
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Username/NIM atau password salah' });
+            if (rows.length === 0) {
+                return res.status(401).json({ message: 'Bukan anggota DRC' });
+            }
+
+            user = rows[0];
+            isMatch = await bcrypt.compare(password, user.password);
+            
+            if (!isMatch) {
+                return res.status(401).json({ message: 'Username/NIM atau password salah' });
+            }
         }
 
         const payload = {
             id: user.id,
             username: user.username,
             nama_lengkap: user.nama_lengkap,
-            role: user.role
+            role: user.role,
+            nim: user.nim
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
         res.json({
-            message: 'Login berhasil',
+            message: isSiadinSuccess ? 'Login berhasil (via SIADIN)' : 'Login berhasil',
             token,
             user: payload
         });

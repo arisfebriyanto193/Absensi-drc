@@ -8,6 +8,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'siadin' | 'drc'>('siadin');
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -19,7 +20,7 @@ export default function LoginPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, loginMethod }),
       });
 
       const data = await res.json();
@@ -48,9 +49,46 @@ export default function LoginPage() {
     <div className="min-h-screen flex-center relative" style={{ backgroundColor: "var(--bg-color)" }}>
       <div className="login-container surface-card fade-in">
         
-        <div style={{ textAlign: "center", marginBottom: "30px" }}>
+        <div style={{ textAlign: "center", marginBottom: "25px" }}>
           <h1 style={{ fontSize: "1.75rem", marginBottom: "8px", color: "var(--text-main)" }}>Sistem Absensi Piket</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>Silakan login untuk melanjutkan</p>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>Silakan pilih metode login</p>
+        </div>
+
+        <div style={{ display: 'flex', marginBottom: '25px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--text-main)' }}>
+          <button 
+            type="button"
+            onClick={() => { setLoginMethod('siadin'); setError(""); }}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              border: 'none', 
+              backgroundColor: loginMethod === 'siadin' ? 'var(--text-main)' : 'transparent',
+              color: loginMethod === 'siadin' ? 'white' : 'var(--text-main)',
+              cursor: 'pointer',
+              fontWeight: loginMethod === 'siadin' ? '600' : 'normal',
+              transition: 'all 0.2s',
+              fontSize: '0.9rem'
+            }}
+          >
+            Login SIADIN
+          </button>
+          <button 
+            type="button"
+            onClick={() => { setLoginMethod('drc'); setError(""); }}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              border: 'none', 
+              backgroundColor: loginMethod === 'drc' ? 'var(--text-main)' : 'transparent',
+              color: loginMethod === 'drc' ? 'white' : 'var(--text-main)',
+              cursor: 'pointer',
+              fontWeight: loginMethod === 'drc' ? '600' : 'normal',
+              transition: 'all 0.2s',
+              fontSize: '0.9rem'
+            }}
+          >
+            Akun Lokal DRC
+          </button>
         </div>
 
         {error && (
@@ -61,12 +99,14 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label className="form-label" htmlFor="username">NIM / Username</label>
+            <label className="form-label" htmlFor="username">
+              {loginMethod === 'siadin' ? 'NIM' : 'NIM / Username'}
+            </label>
             <input 
               id="username"
               type="text" 
               className="form-input" 
-              placeholder="Masukkan NIM / username" 
+              placeholder={loginMethod === 'siadin' ? "Masukkan NIM SIADIN" : "Masukkan NIM / username lokal"} 
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -79,7 +119,7 @@ export default function LoginPage() {
               id="password"
               type="password" 
               className="form-input" 
-              placeholder="Masukkan password"
+              placeholder={loginMethod === 'siadin' ? "Masukkan password SIADIN" : "Masukkan password lokal"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

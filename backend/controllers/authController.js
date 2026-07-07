@@ -10,17 +10,17 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Username dan password harus diisi' });
         }
 
-        const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role FROM users WHERE username = ?', [username]);
+        const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role FROM users WHERE username = ? OR nim = ?', [username, username]);
 
         if (rows.length === 0) {
-            return res.status(401).json({ message: 'Username atau password salah' });
+            return res.status(401).json({ message: 'Username/NIM atau password salah' });
         }
 
         const user = rows[0];
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(401).json({ message: 'Username atau password salah' });
+            return res.status(401).json({ message: 'Username/NIM atau password salah' });
         }
 
         const payload = {

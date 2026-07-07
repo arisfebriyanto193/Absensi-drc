@@ -61,12 +61,12 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label className="form-label" htmlFor="username">Username</label>
+            <label className="form-label" htmlFor="username">NIM / Username</label>
             <input 
               id="username"
               type="text" 
               className="form-input" 
-              placeholder="Masukkan username" 
+              placeholder="Masukkan NIM / username" 
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required

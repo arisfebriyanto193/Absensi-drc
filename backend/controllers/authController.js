@@ -26,7 +26,7 @@ exports.login = async (req, res) => {
                 
                 if (siadinResponse.ok && siadinData.message === 'Success') {
                     // SIADIN sukses, cek apakah terdaftar di database DRC
-                    const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role, nim FROM users WHERE username = ? OR nim = ?', [username, username]);
+                    const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role, nim, periode, jabatan FROM users WHERE username = ? OR nim = ?', [username, username]);
                     
                     if (rows.length === 0) {
                         return res.status(401).json({ message: 'Bukan anggota DRC' });
@@ -44,7 +44,7 @@ exports.login = async (req, res) => {
             }
         } else {
             // Opsi 2: Login via Akun DRC (Lokal)
-            const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role, nim FROM users WHERE username = ? OR nim = ?', [username, username]);
+            const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role, nim, periode, jabatan FROM users WHERE username = ? OR nim = ?', [username, username]);
 
             if (rows.length === 0) {
                 return res.status(401).json({ message: 'Bukan anggota DRC' });
@@ -58,12 +58,23 @@ exports.login = async (req, res) => {
             }
         }
 
+        let effectiveRole = user.role;
+        if (user.jabatan && (user.jabatan.includes('Ketua Umum') || user.jabatan.includes('Ketua Internal'))) {
+            effectiveRole = 'admin';
+        } else if (user.jabatan && user.jabatan.includes('Bendahara')) {
+            effectiveRole = 'bendahara';
+        } else if (user.jabatan && user.jabatan.includes('Sekretaris')) {
+            effectiveRole = 'sekretaris';
+        }
+
         const payload = {
             id: user.id,
             username: user.username,
             nama_lengkap: user.nama_lengkap,
-            role: user.role,
-            nim: user.nim
+            role: effectiveRole,
+            nim: user.nim,
+            periode: user.periode,
+            jabatan: user.jabatan
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });

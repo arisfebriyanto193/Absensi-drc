@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 
 exports.getUsers = async (req, res) => {
     try {
-        const [users] = await pool.query(`SELECT id, username, nama_lengkap, role, nim, email FROM users`);
+        const [users] = await pool.query(`SELECT id, username, nama_lengkap, role, nim, email, periode, jabatan FROM users`);
         res.json(users);
     } catch (error) {
         console.error(error);
@@ -14,10 +14,10 @@ exports.getUsers = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const { username, nama_lengkap, role, nim, email, password } = req.body;
+        const { username, nama_lengkap, role, nim, email, password, periode, jabatan } = req.body;
         
-        let query = 'UPDATE users SET username = ?, nama_lengkap = ?, role = ?, nim = ?, email = ?';
-        let params = [username, nama_lengkap, role, nim, email];
+        let query = 'UPDATE users SET username = ?, nama_lengkap = ?, role = ?, nim = ?, email = ?, periode = ?, jabatan = ?';
+        let params = [username, nama_lengkap, role, nim, email, periode, jabatan];
 
         if (password && password.trim() !== '') {
             const salt = await bcrypt.genSalt(10);

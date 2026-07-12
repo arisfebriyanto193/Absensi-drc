@@ -23,3 +23,19 @@ exports.isAdmin = (req, res, next) => {
         res.status(403).json({ message: 'Akses ditolak: Hanya untuk admin' });
     }
 };
+
+exports.isBendahara = (req, res, next) => {
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'bendahara')) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Akses ditolak: Hanya untuk bendahara atau admin' });
+    }
+};
+
+exports.isSekretaris = (req, res, next) => {
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'sekretaris')) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Akses ditolak: Hanya untuk sekretaris atau admin' });
+    }
+};

@@ -18,9 +18,68 @@ exports.getDashboard = async (req, res) => {
             [userId]
         );
 
+        // Status Kas Anggota
+        const [kas] = await pool.query(
+            `SELECT total_terbayar, bulan_dibayar FROM keuangan_kas_anggota WHERE user_id = ?`,
+            [userId]
+        );
+        
+        let kasAnggotaStatus = null;
+        if (kas.length > 0) {
+            const [pengaturan] = await pool.query('SELECT pengaturan_key, pengaturan_value FROM keuangan_pengaturan');
+            const getSetting = (k, def) => {
+                const row = pengaturan.find(p => p.pengaturan_key === k);
+                return row ? row.pengaturan_value : def;
+            };
+            const kasPerBulan = Number(getSetting('kas_per_bulan', 10000));
+            const startMonth = getSetting('periode_mulai', '2024-10');
+            const endMonth = getSetting('periode_selesai', '2025-09');
+            
+            let bulanArray = [];
+            try { bulanArray = JSON.parse(kas[0].bulan_dibayar || '[]'); } catch(e) {}
+            
+            let start = new Date(startMonth + "-01");
+            let end = new Date(endMonth + "-01");
+            let totalBulan = 0;
+            while(start <= end) {
+                totalBulan++;
+                start.setMonth(start.getMonth() + 1);
+            }
+            
+            kasAnggotaStatus = {
+                target_nominal: totalBulan * kasPerBulan,
+                total_terbayar: bulanArray.length * kasPerBulan
+            };
+        }
+
+        // Status Honor Ekskul
+        const [honorRows] = await pool.query(`
+            SELECT ep.honor, ep.status_pembayaran
+            FROM ekskul_pengajar ep
+            JOIN ekskul_pembelajaran p ON ep.pembelajaran_id = p.id
+            WHERE ep.user_id = ?
+        `, [userId]);
+
+        let honor_ekskul = null;
+        if (honorRows.length > 0) {
+            let honor_sudah_dibayar = 0;
+            let honor_belum_dibayar = 0;
+
+            honorRows.forEach(row => {
+                if (row.status_pembayaran === 'sudah') {
+                    honor_sudah_dibayar += Number(row.honor);
+                } else {
+                    honor_belum_dibayar += Number(row.honor);
+                }
+            });
+            honor_ekskul = { honor_sudah_dibayar, honor_belum_dibayar };
+        }
+
         res.json({
             jadwal_hari_ini: jadwal.length > 0 ? jadwal[0] : null,
-            riwayat_terbaru: riwayat
+            riwayat_terbaru: riwayat,
+            kas_anggota: kasAnggotaStatus,
+            honor_ekskul: honor_ekskul
         });
     } catch (error) {
         console.error(error);

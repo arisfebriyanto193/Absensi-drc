@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -33,8 +34,64 @@ export default function LoginPage() {
         localStorage.setItem("user", JSON.stringify(data.user));
 
         if (data.user.role === "admin") {
-          router.push("/admin/dashboard");
+          Swal.fire({
+            title: 'Pilih Akses',
+            text: 'Login sebagai Admin atau User?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#6366f1',
+            cancelButtonColor: '#10b981',
+            confirmButtonText: 'Masuk sebagai Admin',
+            cancelButtonText: 'Masuk sebagai User'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              localStorage.setItem("activeRole", "admin");
+              router.push("/admin/dashboard");
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              localStorage.setItem("activeRole", "user");
+              router.push("/dashboard");
+            }
+          });
+        } else if (data.user.role === "bendahara") {
+          Swal.fire({
+            title: 'Pilih Akses',
+            text: 'Login sebagai Bendahara atau User?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#10b981',
+            confirmButtonText: 'Masuk sebagai Bendahara',
+            cancelButtonText: 'Masuk sebagai User'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              localStorage.setItem("activeRole", "bendahara");
+              router.push("/bendahara/dashboard");
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              localStorage.setItem("activeRole", "user");
+              router.push("/dashboard");
+            }
+          });
+        } else if (data.user.role === "sekretaris") {
+          Swal.fire({
+            title: 'Pilih Akses',
+            text: 'Login sebagai Sekretaris atau User?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#10b981',
+            confirmButtonText: 'Masuk sebagai Sekretaris',
+            cancelButtonText: 'Masuk sebagai User'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              localStorage.setItem("activeRole", "sekretaris");
+              router.push("/sekretaris/dashboard");
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              localStorage.setItem("activeRole", "user");
+              router.push("/dashboard");
+            }
+          });
         } else {
+          localStorage.setItem("activeRole", "user");
           router.push("/dashboard");
         }
       }

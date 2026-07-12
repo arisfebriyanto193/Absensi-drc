@@ -21,7 +21,7 @@ import {
   ChevronDown
 } from "lucide-react";
 
-export default function Sidebar({ role, isMobileOpen, setIsMobileOpen }: { role: string, isMobileOpen?: boolean, setIsMobileOpen?: any }) {
+export default function SidebarSekretaris({ isMobileOpen, setIsMobileOpen }: { isMobileOpen?: boolean, setIsMobileOpen?: any }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
@@ -40,38 +40,19 @@ export default function Sidebar({ role, isMobileOpen, setIsMobileOpen }: { role:
     router.push("/");
   };
 
-  const userLinks = [
-    { name: "Dashboard", path: "/dashboard", icon: <Home size={22} /> },
-    { name: "Absensi", path: "/dashboard/absen", icon: <Camera size={22} /> },
-    { name: "Izin", path: "/dashboard/izin", icon: <FileText size={22} /> },
-    { name: "Jadwal", path: "/dashboard/jadwal", icon: <Calendar size={22} /> },
-    { name: "Riwayat", path: "/dashboard/riwayat", icon: <Clock size={22} /> },
-    { name: "Profil", path: "/dashboard/profil", icon: <User size={22} /> },
-  ];
-
-  const adminLinks = [
-    { name: "Dashboard", path: "/admin/dashboard", icon: <Home size={22} /> },
+  const links = [
+    { name: "Dashboard", path: "/sekretaris/dashboard", icon: <Home size={22} /> },
     { 
-      name: "Kelola Absensi", 
-      icon: <CheckCircle size={22} />, 
+      name: "Kelola Surat", 
+      icon: <FileText size={22} />, 
       subMenu: [
-        { name: "Konfirmasi Absen", path: "/admin/absensi" },
-        { name: "Konfirmasi Izin", path: "/admin/izin" },
-        { name: "Laporan Piket", path: "/admin/laporan" },
+        { name: "Buat Surat", path: "/sekretaris/surat/buat" },
+        { name: "Template Surat", path: "/sekretaris/template" },
+        { name: "Riwayat Surat", path: "/sekretaris/surat" }
       ]
     },
-    { name: "Kelola Jadwal", path: "/admin/jadwal", icon: <Calendar size={22} /> },
-    { name: "Kelola User", path: "/admin/users", icon: <Users size={22} /> },
   ];
 
-  const bendaharaLinks = [
-    { name: "Dashboard", path: "/bendahara/dashboard", icon: <Home size={22} /> },
-    { name: "Kegiatan & Transaksi", path: "/bendahara/kegiatan", icon: <Activity size={22} /> },
-    { name: "Kas Anggota", path: "/bendahara/kas-anggota", icon: <UserCheck size={22} /> },
-    { name: "Ekskul Robotic", path: "/bendahara/ekskul", icon: <Wallet size={22} /> },
-  ];
-
-  const links = role === "admin" ? adminLinks : role === "bendahara" ? bendaharaLinks : userLinks;
   const sidebarWidth = isHovered ? "260px" : "80px";
 
   return (

@@ -6,6 +6,7 @@ const adminIzinController = require('../controllers/adminIzinController');
 const adminJadwalController = require('../controllers/adminJadwalController');
 const adminUsersController = require('../controllers/adminUsersController');
 const adminLaporanController = require('../controllers/adminLaporanController');
+const adminJabatansController = require('../controllers/adminJabatansController');
 const { verifyToken, isAdmin } = require('../middleware/auth');
 
 router.use(verifyToken, isAdmin);
@@ -33,6 +34,9 @@ router.delete('/jadwal/:id', adminJadwalController.hapusJadwal);
 router.get('/users', adminUsersController.getUsers);
 router.put('/users/:id', adminUsersController.updateUser);
 router.delete('/users/:id', adminUsersController.deleteUser);
+
+// Jabatans
+router.get('/jabatans', adminJabatansController.getJabatans);
 
 // Laporan
 router.get('/laporan', adminLaporanController.getLaporan);

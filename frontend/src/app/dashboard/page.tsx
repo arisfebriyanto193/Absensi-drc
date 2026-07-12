@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calendar, Info } from "lucide-react";
+import { Calendar, Info, Wallet } from "lucide-react";
 
 export default function UserDashboard() {
   const [data, setData] = useState<any>(null);
@@ -78,6 +78,54 @@ export default function UserDashboard() {
           </div>
         </div>
       </div>
+
+      {data?.kas_anggota && (
+        <div className="surface-card" style={{ marginBottom: "32px", borderTop: "4px solid #10b981" }}>
+          <h2 style={{ fontSize: "1.2rem", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <Wallet size={20} color="#10b981" /> Status Uang Kas Anda
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+            <div style={{ padding: "16px", backgroundColor: "rgba(0,0,0,0.02)", borderRadius: "12px", border: "1px solid var(--border)" }}>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "4px" }}>Target Wajib</p>
+              <p style={{ fontSize: "1.2rem", fontWeight: "700" }}>Rp {Number(data.kas_anggota.target_nominal).toLocaleString("id-ID")}</p>
+            </div>
+            <div style={{ padding: "16px", backgroundColor: "rgba(16, 185, 129, 0.05)", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+              <p style={{ fontSize: "0.85rem", color: "#10b981", marginBottom: "4px" }}>Telah Dibayar</p>
+              <p style={{ fontSize: "1.2rem", fontWeight: "700", color: "#10b981" }}>Rp {Number(data.kas_anggota.total_terbayar).toLocaleString("id-ID")}</p>
+            </div>
+            <div style={{ padding: "16px", backgroundColor: "rgba(239, 68, 68, 0.05)", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+              <p style={{ fontSize: "0.85rem", color: "#ef4444", marginBottom: "4px" }}>Sisa Kekurangan</p>
+              <p style={{ fontSize: "1.2rem", fontWeight: "700", color: "#ef4444" }}>
+                Rp {Math.max(0, Number(data.kas_anggota.target_nominal) - Number(data.kas_anggota.total_terbayar)).toLocaleString("id-ID")}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {data?.honor_ekskul && (
+        <div className="surface-card" style={{ marginBottom: "32px", borderTop: "4px solid #f59e0b" }}>
+          <h2 style={{ fontSize: "1.2rem", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <Wallet size={20} color="#f59e0b" /> Status Honor Mengajar Ekskul
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+            <div style={{ padding: "16px", backgroundColor: "rgba(16, 185, 129, 0.05)", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+              <p style={{ fontSize: "0.85rem", color: "#10b981", marginBottom: "4px" }}>Sudah Terbayar</p>
+              <p style={{ fontSize: "1.2rem", fontWeight: "700", color: "#10b981" }}>Rp {Number(data.honor_ekskul.honor_sudah_dibayar).toLocaleString("id-ID")}</p>
+            </div>
+            <div style={{ padding: "16px", backgroundColor: "rgba(245, 158, 11, 0.05)", borderRadius: "12px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+              <p style={{ fontSize: "0.85rem", color: "#d97706", marginBottom: "4px" }}>Belum Terbayar (Pending)</p>
+              <p style={{ fontSize: "1.2rem", fontWeight: "700", color: "#d97706" }}>Rp {Number(data.honor_ekskul.honor_belum_dibayar).toLocaleString("id-ID")}</p>
+            </div>
+            <div style={{ padding: "16px", backgroundColor: "rgba(0,0,0,0.02)", borderRadius: "12px", border: "1px solid var(--border)" }}>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "4px" }}>Total Diperoleh</p>
+              <p style={{ fontSize: "1.2rem", fontWeight: "700" }}>
+                Rp {(Number(data.honor_ekskul.honor_sudah_dibayar) + Number(data.honor_ekskul.honor_belum_dibayar)).toLocaleString("id-ID")}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="surface-card">
         <h2 style={{ fontSize: "1.2rem", marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "10px" }}>

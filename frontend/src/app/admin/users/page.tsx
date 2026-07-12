@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
+  const [jabatans, setJabatans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -15,6 +16,8 @@ export default function AdminUsers() {
     nim: "",
     username: "",
     email: "",
+    periode: "",
+    jabatan: "",
     role: "user",
     password: ""
   });
@@ -35,8 +38,21 @@ export default function AdminUsers() {
     });
   };
 
+  const fetchJabatans = () => {
+    const token = localStorage.getItem("token");
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/jabatans`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) setJabatans(data);
+    })
+    .catch(err => console.error(err));
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchJabatans();
   }, []);
 
   const handleEditClick = (user: any) => {
@@ -46,6 +62,8 @@ export default function AdminUsers() {
       nim: user.nim || "",
       username: user.username || "",
       email: user.email || "",
+      periode: user.periode || "",
+      jabatan: user.jabatan || "",
       role: user.role || "user",
       password: "" // password field starts empty, only changed if user types
     });
@@ -128,8 +146,9 @@ export default function AdminUsers() {
                   <tr style={{ backgroundColor: "rgba(0,0,0,0.02)", textAlign: "left" }}>
                     <th style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>Nama Lengkap</th>
                     <th style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>NIM</th>
-                    <th style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>Username</th>
                     <th style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>Email</th>
+                    <th style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>Periode</th>
+                    <th style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>Jabatan</th>
                     <th style={{ padding: "12px", borderBottom: "1px solid var(--border)" }}>Role</th>
                     <th style={{ padding: "12px", borderBottom: "1px solid var(--border)", textAlign: "center" }}>Aksi</th>
                   </tr>
@@ -139,8 +158,9 @@ export default function AdminUsers() {
                     <tr key={u.id} style={{ borderBottom: "1px solid var(--border)", transition: "background-color 0.2s", transform: "none" }} className="hover-scale" onMouseOver={e => e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.01)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                       <td style={{ padding: "12px", fontWeight: "500" }}>{u.nama_lengkap}</td>
                       <td style={{ padding: "12px", color: "var(--text-muted)" }}>{u.nim || "-"}</td>
-                      <td style={{ padding: "12px" }}>{u.username}</td>
                       <td style={{ padding: "12px", color: "var(--text-muted)" }}>{u.email || "-"}</td>
+                      <td style={{ padding: "12px", color: "var(--text-muted)" }}>{u.periode || "-"}</td>
+                      <td style={{ padding: "12px", color: "var(--text-muted)" }}>{u.jabatan || "-"}</td>
                       <td style={{ padding: "12px" }}>
                         <span style={{ 
                           padding: "6px 12px", borderRadius: "12px", fontSize: "0.8rem", fontWeight: "600",
@@ -249,6 +269,31 @@ export default function AdminUsers() {
 
               <div style={{ display: "flex", gap: "12px" }}>
                 <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Periode</label>
+                  <input 
+                    type="text" value={formData.periode} 
+                    placeholder="Contoh: 2024/2025"
+                    onChange={e => setFormData({...formData, periode: e.target.value})}
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem" }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Jabatan</label>
+                  <select 
+                    value={formData.jabatan} 
+                    onChange={e => setFormData({...formData, jabatan: e.target.value})}
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem", backgroundColor: "white" }}
+                  >
+                    <option value="">Pilih Jabatan</option>
+                    {jabatans.map((jab) => (
+                      <option key={jab.id} value={jab.nama_jabatan}>{jab.nama_jabatan}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ flex: 1 }}>
                   <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Role *</label>
                   <select 
                     value={formData.role} 
@@ -257,6 +302,8 @@ export default function AdminUsers() {
                   >
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
+                    <option value="bendahara">Bendahara</option>
+                    <option value="sekretaris">Sekretaris</option>
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>

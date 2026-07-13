@@ -8,6 +8,8 @@ const adminUsersController = require('../controllers/adminUsersController');
 const adminLaporanController = require('../controllers/adminLaporanController');
 const adminJabatansController = require('../controllers/adminJabatansController');
 const { verifyToken, isAdmin } = require('../middleware/auth');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.use(verifyToken, isAdmin);
 
@@ -32,6 +34,8 @@ router.delete('/jadwal/:id', adminJadwalController.hapusJadwal);
 
 // Users
 router.get('/users', adminUsersController.getUsers);
+router.get('/users/template', adminUsersController.downloadTemplate);
+router.post('/users/import', upload.single('file'), adminUsersController.importExcel);
 router.put('/users/:id', adminUsersController.updateUser);
 router.delete('/users/:id', adminUsersController.deleteUser);
 

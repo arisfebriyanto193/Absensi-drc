@@ -39,3 +39,29 @@ exports.isSekretaris = (req, res, next) => {
         res.status(403).json({ message: 'Akses ditolak: Hanya untuk sekretaris atau admin' });
     }
 };
+
+exports.isInventaris = (req, res, next) => {
+    if (req.user) {
+        // Admin always has access
+        if (req.user.role === 'admin') return next();
+        
+        // Check if user has inventaris related jabatan
+        if (req.user.jabatan && (req.user.jabatan.includes('Inventaris') || req.user.jabatan.includes('Ketua Umum'))) {
+            return next();
+        }
+    }
+    res.status(403).json({ message: 'Akses ditolak: Hanya untuk pengurus inventaris atau admin' });
+};
+
+exports.isKetuaInventaris = (req, res, next) => {
+    if (req.user) {
+        // Admin always has access
+        if (req.user.role === 'admin') return next();
+        
+        // Check if user is Ketua Inventaris or Ketua Umum
+        if (req.user.jabatan && (req.user.jabatan.includes('Ketua Inventaris') || req.user.jabatan.includes('Ketua Umum'))) {
+            return next();
+        }
+    }
+    res.status(403).json({ message: 'Akses ditolak: Hanya untuk Ketua Inventaris atau admin' });
+};

@@ -33,26 +33,46 @@ export default function LoginPage() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        if (data.user.role === "admin") {
+        const u = data.user;
+        const isInventaris = u.jabatan && (u.jabatan.includes('Inventaris') || u.jabatan.includes('Ketua Umum'));
+
+        if (u.role === "admin") {
           Swal.fire({
             title: 'Pilih Akses',
-            text: 'Login sebagai Admin atau User?',
-            icon: 'question',
+            input: 'select',
+            inputOptions: {
+              'admin': 'Admin',
+              'bendahara': 'Bendahara',
+              'sekretaris': 'Sekretaris',
+              'inventaris': 'Inventaris',
+              'user': 'User Biasa'
+            },
+            inputPlaceholder: 'Pilih Dashboard',
             showCancelButton: true,
             confirmButtonColor: '#6366f1',
-            cancelButtonColor: '#10b981',
-            confirmButtonText: 'Masuk sebagai Admin',
-            cancelButtonText: 'Masuk sebagai User'
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Masuk',
+            cancelButtonText: 'Batal',
+            inputValidator: (value) => {
+              return new Promise((resolve) => {
+                if (value) {
+                  resolve();
+                } else {
+                  resolve('Anda harus memilih akses!');
+                }
+              });
+            }
           }).then((result) => {
-            if (result.isConfirmed) {
-              localStorage.setItem("activeRole", "admin");
-              router.push("/admin/dashboard");
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-              localStorage.setItem("activeRole", "user");
-              router.push("/dashboard");
+            if (result.isConfirmed && result.value) {
+              localStorage.setItem("activeRole", result.value);
+              if (result.value === 'admin') router.push("/admin/dashboard");
+              else if (result.value === 'bendahara') router.push("/bendahara/dashboard");
+              else if (result.value === 'sekretaris') router.push("/sekretaris/dashboard");
+              else if (result.value === 'inventaris') router.push("/inventaris/dashboard");
+              else router.push("/dashboard");
             }
           });
-        } else if (data.user.role === "bendahara") {
+        } else if (u.role === "bendahara") {
           Swal.fire({
             title: 'Pilih Akses',
             text: 'Login sebagai Bendahara atau User?',
@@ -71,7 +91,7 @@ export default function LoginPage() {
               router.push("/dashboard");
             }
           });
-        } else if (data.user.role === "sekretaris") {
+        } else if (u.role === "sekretaris") {
           Swal.fire({
             title: 'Pilih Akses',
             text: 'Login sebagai Sekretaris atau User?',
@@ -85,6 +105,25 @@ export default function LoginPage() {
             if (result.isConfirmed) {
               localStorage.setItem("activeRole", "sekretaris");
               router.push("/sekretaris/dashboard");
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              localStorage.setItem("activeRole", "user");
+              router.push("/dashboard");
+            }
+          });
+        } else if (isInventaris) {
+          Swal.fire({
+            title: 'Pilih Akses',
+            text: 'Login sebagai Inventaris atau User?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#10b981',
+            confirmButtonText: 'Masuk sebagai Inventaris',
+            cancelButtonText: 'Masuk sebagai User'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              localStorage.setItem("activeRole", "inventaris");
+              router.push("/inventaris/dashboard");
             } else if (result.dismiss === Swal.DismissReason.cancel) {
               localStorage.setItem("activeRole", "user");
               router.push("/dashboard");

@@ -246,7 +246,7 @@ Demikian surat permohonan ini kami sampaikan. Atas perhatian dan kebijaksanaan B
   };
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", animation: "fadeIn 0.5s" }}>
+    <div style={{ width: "100%", animation: "fadeIn 0.5s" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
         <div>
           <h1 style={{ fontSize: "1.8rem", fontWeight: "700", color: "var(--text-main)", marginBottom: "8px" }}>
@@ -267,7 +267,7 @@ Demikian surat permohonan ini kami sampaikan. Atas perhatian dan kebijaksanaan B
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: "20px" }}>
         {templates.map(tmpl => (
-          <div key={tmpl.id} className="surface-card" style={{ padding: "20px", display: "flex", flexDirection: "column" }}>
+          <div key={tmpl.id} className="surface-card" style={{ padding: "24px", display: "flex", flexDirection: "column", transition: "transform 0.3s ease, box-shadow 0.3s ease", cursor: "pointer", borderTop: "4px solid var(--primary)" }} onMouseOver={e => { e.currentTarget.style.transform = "translateY(-5px)"; e.currentTarget.style.boxShadow = "0 15px 30px -5px rgba(0, 0, 0, 0.1)"; }} onMouseOut={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "var(--shadow-md)"; }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "16px" }}>
               <div style={{ width: "40px", height: "40px", borderRadius: "8px", backgroundColor: "rgba(79, 172, 254, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)", flexShrink: 0 }}>
                 <FileCode2 size={22} />
@@ -283,16 +283,20 @@ Demikian surat permohonan ini kami sampaikan. Atas perhatian dan kebijaksanaan B
               </div>
             </div>
             
-            <div style={{ marginTop: "auto", display: "flex", gap: "8px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
+            <div style={{ marginTop: "auto", display: "flex", gap: "12px", paddingTop: "20px", borderTop: "1px dashed var(--border)" }}>
               <button 
                 onClick={() => handleEdit(tmpl)}
-                style={{ flex: 1, padding: "8px", backgroundColor: "transparent", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text-main)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+                style={{ flex: 1, padding: "10px", backgroundColor: "rgba(59, 130, 246, 0.1)", border: "none", borderRadius: "8px", color: "var(--primary)", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.2s" }}
+                onMouseOver={e => { e.currentTarget.style.backgroundColor = "var(--primary)"; e.currentTarget.style.color = "white"; }}
+                onMouseOut={e => { e.currentTarget.style.backgroundColor = "rgba(59, 130, 246, 0.1)"; e.currentTarget.style.color = "var(--primary)"; }}
               >
                 <Edit size={16} /> Edit
               </button>
               <button 
                 onClick={() => handleDelete(tmpl.id)}
-                style={{ flex: 1, padding: "8px", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "var(--radius-sm)", color: "#ef4444", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+                style={{ flex: 1, padding: "10px", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "none", borderRadius: "8px", color: "#ef4444", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.2s" }}
+                onMouseOver={e => { e.currentTarget.style.backgroundColor = "#ef4444"; e.currentTarget.style.color = "white"; }}
+                onMouseOut={e => { e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.1)"; e.currentTarget.style.color = "#ef4444"; }}
               >
                 <Trash size={16} /> Hapus
               </button>

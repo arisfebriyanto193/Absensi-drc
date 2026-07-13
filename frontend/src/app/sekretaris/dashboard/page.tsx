@@ -22,7 +22,7 @@ export default function SekretarisDashboard() {
   }, []);
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", animation: "fadeIn 0.5s" }}>
+    <div style={{ width: "100%", animation: "fadeIn 0.5s" }}>
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ fontSize: "1.8rem", fontWeight: "700", color: "var(--text-main)", marginBottom: "8px" }}>
           Dashboard Sekretaris
@@ -32,14 +32,31 @@ export default function SekretarisDashboard() {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px", marginBottom: "32px" }}>
-        <div className="surface-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "24px", borderLeft: "4px solid var(--primary)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "12px", backgroundColor: "rgba(79, 172, 254, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}>
-            <FileText size={24} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px", marginBottom: "32px" }}>
+        <div 
+          className="surface-card" 
+          style={{ 
+            display: "flex", alignItems: "center", gap: "20px", padding: "28px", 
+            borderLeft: "5px solid var(--primary)",
+            background: "linear-gradient(135deg, var(--surface) 0%, rgba(79, 172, 254, 0.05) 100%)",
+            transition: "transform 0.3s ease, box-shadow 0.3s ease",
+            cursor: "pointer"
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = "translateY(-5px)";
+            e.currentTarget.style.boxShadow = "0 15px 30px -5px rgba(79, 172, 254, 0.15)";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "var(--shadow-md)";
+          }}
+        >
+          <div style={{ width: "64px", height: "64px", borderRadius: "16px", backgroundColor: "rgba(79, 172, 254, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}>
+            <FileText size={32} />
           </div>
           <div>
-            <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "4px" }}>Total Surat Dibuat</p>
-            <p style={{ fontSize: "1.5rem", fontWeight: "700", color: "var(--text-main)" }}>{riwayat.length}</p>
+            <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "4px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Surat Dibuat</p>
+            <p style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--text-main)", lineHeight: "1.2" }}>{riwayat.length}</p>
           </div>
         </div>
       </div>
@@ -61,22 +78,26 @@ export default function SekretarisDashboard() {
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 8px" }}>
               <thead>
-                <tr style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
-                  <th style={{ padding: "12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", borderBottom: "2px solid var(--border)" }}>No. Surat</th>
-                  <th style={{ padding: "12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", borderBottom: "2px solid var(--border)" }}>Jenis Template</th>
-                  <th style={{ padding: "12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", borderBottom: "2px solid var(--border)" }}>Tujuan</th>
-                  <th style={{ padding: "12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", borderBottom: "2px solid var(--border)" }}>Tanggal</th>
+                <tr>
+                  <th style={{ padding: "0 16px 12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>No. Surat</th>
+                  <th style={{ padding: "0 16px 12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Jenis Template</th>
+                  <th style={{ padding: "0 16px 12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Tujuan</th>
+                  <th style={{ padding: "0 16px 12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Tanggal</th>
                 </tr>
               </thead>
               <tbody>
                 {riwayat.slice(0, 5).map((item) => (
-                  <tr key={item.id} style={{ borderBottom: "1px solid var(--border)", transition: "background-color 0.2s" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.01)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
-                    <td style={{ padding: "12px", fontWeight: "500", color: "var(--primary)" }}>{item.no_surat}</td>
-                    <td style={{ padding: "12px" }}>{item.nama_template}</td>
-                    <td style={{ padding: "12px", color: "var(--text-muted)" }}>{item.tujuan_surat || "-"}</td>
-                    <td style={{ padding: "12px" }}>{new Date(item.tanggal_surat).toLocaleDateString("id-ID")}</td>
+                  <tr key={item.id} style={{ backgroundColor: "var(--surface)", boxShadow: "0 2px 8px rgba(0,0,0,0.02)", borderRadius: "12px", transition: "transform 0.2s, box-shadow 0.2s" }} onMouseOver={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.05)"; }} onMouseOut={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.02)"; }}>
+                    <td style={{ padding: "16px", fontWeight: "600", color: "var(--primary)", borderTopLeftRadius: "12px", borderBottomLeftRadius: "12px", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)" }}>{item.no_surat}</td>
+                    <td style={{ padding: "16px", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
+                      <span style={{ padding: "6px 12px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "600" }}>
+                        {item.nama_template}
+                      </span>
+                    </td>
+                    <td style={{ padding: "16px", color: "var(--text-main)", fontWeight: "500", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>{item.tujuan_surat || "-"}</td>
+                    <td style={{ padding: "16px", color: "var(--text-muted)", borderTopRightRadius: "12px", borderBottomRightRadius: "12px", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}>{new Date(item.tanggal_surat).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</td>
                   </tr>
                 ))}
               </tbody>

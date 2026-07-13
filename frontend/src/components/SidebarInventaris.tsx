@@ -5,23 +5,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   Home, 
-  Camera, 
-  FileText, 
-  Calendar, 
-  Clock, 
-  User, 
-  CheckCircle, 
-  Mail, 
-  Users, 
+  Package,
+  ClipboardList,
   LogOut,
   X,
-  Wallet,
-  Activity,
-  UserCheck,
   ChevronDown
 } from "lucide-react";
 
-export default function SidebarSekretaris({ isMobileOpen, setIsMobileOpen }: { isMobileOpen?: boolean, setIsMobileOpen?: any }) {
+export default function SidebarInventaris({ isMobileOpen, setIsMobileOpen }: { isMobileOpen?: boolean, setIsMobileOpen?: any }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
@@ -41,16 +32,9 @@ export default function SidebarSekretaris({ isMobileOpen, setIsMobileOpen }: { i
   };
 
   const links = [
-    { name: "Dashboard", path: "/sekretaris/dashboard", icon: <Home size={22} /> },
-    { 
-      name: "Kelola Surat", 
-      icon: <FileText size={22} />, 
-      subMenu: [
-        { name: "Buat Surat", path: "/sekretaris/surat/buat" },
-        { name: "Template Surat", path: "/sekretaris/template" },
-        { name: "Riwayat Surat", path: "/sekretaris/surat" }
-      ]
-    },
+    { name: "Dashboard", path: "/inventaris/dashboard", icon: <Home size={22} /> },
+    { name: "Kelola Barang", path: "/inventaris/barang", icon: <Package size={22} /> },
+    { name: "Kelola Peminjaman", path: "/inventaris/peminjaman", icon: <ClipboardList size={22} /> },
   ];
 
   const sidebarWidth = isHovered ? "260px" : "80px";
@@ -106,7 +90,7 @@ export default function SidebarSekretaris({ isMobileOpen, setIsMobileOpen }: { i
             overflow: "hidden",
             transition: "all 0.3s ease" 
           }}>
-            Absensi Piket
+            Inventaris DRC
           </h2>
           
           {/* Close button on mobile */}
@@ -222,7 +206,7 @@ export default function SidebarSekretaris({ isMobileOpen, setIsMobileOpen }: { i
                   backgroundColor: pathname === link.path ? "rgba(79, 172, 254, 0.1)" : "transparent",
                   fontWeight: pathname === link.path ? "600" : "500",
                   transition: "all 0.2s",
-                  justifyContent: "flex-start" // Always flex-start, we will control centering via icon margins if needed
+                  justifyContent: "flex-start"
                 }}
                 title={(!isHovered && !isMobileOpen) ? link.name : ""}
               >

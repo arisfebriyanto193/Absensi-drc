@@ -243,7 +243,7 @@ export default function RiwayatSurat() {
   };
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", animation: "fadeIn 0.5s" }}>
+    <div style={{ width: "100%", animation: "fadeIn 0.5s" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
         <div>
           <h1 style={{ fontSize: "1.8rem", fontWeight: "700", color: "var(--text-main)", marginBottom: "8px" }}>
@@ -265,25 +265,29 @@ export default function RiwayatSurat() {
             <p>Belum ada riwayat pembuatan surat.</p>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div style={{ overflowX: "auto", padding: "12px 24px 24px" }}>
+            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 8px" }}>
               <thead>
-                <tr style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
-                  <th style={{ padding: "12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", borderBottom: "2px solid var(--border)" }}>No. Surat</th>
-                  <th style={{ padding: "12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", borderBottom: "2px solid var(--border)" }}>Jenis Template</th>
-                  <th style={{ padding: "12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", borderBottom: "2px solid var(--border)" }}>Tujuan</th>
-                  <th style={{ padding: "12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", borderBottom: "2px solid var(--border)" }}>Tanggal Surat</th>
-                  <th style={{ padding: "12px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", borderBottom: "2px solid var(--border)" }}>Aksi</th>
+                <tr>
+                  <th style={{ padding: "0 16px 12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>No. Surat</th>
+                  <th style={{ padding: "0 16px 12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Jenis Template</th>
+                  <th style={{ padding: "0 16px 12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Tujuan</th>
+                  <th style={{ padding: "0 16px 12px", textAlign: "left", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Tanggal Surat</th>
+                  <th style={{ padding: "0 16px 12px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {riwayat.map((item) => (
-                  <tr key={item.id} style={{ borderBottom: "1px solid var(--border)", transition: "background-color 0.2s" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.01)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
-                    <td style={{ padding: "12px", fontWeight: "500", color: "var(--primary)" }}>{item.no_surat}</td>
-                    <td style={{ padding: "12px" }}>{item.nama_template}</td>
-                    <td style={{ padding: "12px", color: "var(--text-muted)" }}>{item.tujuan_surat || "-"}</td>
-                    <td style={{ padding: "12px" }}>{new Date(item.tanggal_surat).toLocaleDateString("id-ID")}</td>
-                    <td style={{ padding: "12px" }}>
+                  <tr key={item.id} style={{ backgroundColor: "var(--bg-color)", boxShadow: "0 2px 8px rgba(0,0,0,0.02)", borderRadius: "12px", transition: "transform 0.2s, box-shadow 0.2s" }} onMouseOver={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.05)"; }} onMouseOut={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.02)"; }}>
+                    <td style={{ padding: "16px", fontWeight: "600", color: "var(--primary)", borderTopLeftRadius: "12px", borderBottomLeftRadius: "12px", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", borderLeft: "1px solid var(--border)" }}>{item.no_surat}</td>
+                    <td style={{ padding: "16px", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
+                      <span style={{ padding: "6px 12px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "600" }}>
+                        {item.nama_template}
+                      </span>
+                    </td>
+                    <td style={{ padding: "16px", color: "var(--text-main)", fontWeight: "500", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>{item.tujuan_surat || "-"}</td>
+                    <td style={{ padding: "16px", color: "var(--text-muted)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>{new Date(item.tanggal_surat).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                    <td style={{ padding: "16px", borderTopRightRadius: "12px", borderBottomRightRadius: "12px", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}>
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
                         <button
                           onClick={() => handlePreview(item)}

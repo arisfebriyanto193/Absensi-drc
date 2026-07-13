@@ -18,7 +18,9 @@ import {
   Wallet,
   Activity,
   UserCheck,
-  ChevronDown
+  ChevronDown,
+  Package,
+  Layers
 } from "lucide-react";
 
 export default function Sidebar({ role, isMobileOpen, setIsMobileOpen }: { role: string, isMobileOpen?: boolean, setIsMobileOpen?: any }) {
@@ -42,10 +44,18 @@ export default function Sidebar({ role, isMobileOpen, setIsMobileOpen }: { role:
 
   const userLinks = [
     { name: "Dashboard", path: "/dashboard", icon: <Home size={22} /> },
-    { name: "Absensi", path: "/dashboard/absen", icon: <Camera size={22} /> },
-    { name: "Izin", path: "/dashboard/izin", icon: <FileText size={22} /> },
-    { name: "Jadwal", path: "/dashboard/jadwal", icon: <Calendar size={22} /> },
-    { name: "Riwayat", path: "/dashboard/riwayat", icon: <Clock size={22} /> },
+    { 
+      name: "Absen Piket", 
+      icon: <Camera size={22} />, 
+      subMenu: [
+        { name: "Isi Absen", path: "/dashboard/absen" },
+        { name: "Pengajuan Izin", path: "/dashboard/izin" },
+        { name: "Jadwal Piket", path: "/dashboard/jadwal" },
+        { name: "Riwayat", path: "/dashboard/riwayat" },
+      ]
+    },
+    { name: "Kegiatan", path: "/dashboard/kegiatan", icon: <Layers size={22} /> },
+    { name: "Peminjaman", path: "/dashboard/peminjaman", icon: <Package size={22} /> },
     { name: "Profil", path: "/dashboard/profil", icon: <User size={22} /> },
   ];
 
@@ -60,13 +70,14 @@ export default function Sidebar({ role, isMobileOpen, setIsMobileOpen }: { role:
         { name: "Laporan Piket", path: "/admin/laporan" },
       ]
     },
+    { name: "Kelola Kegiatan", path: "/admin/kegiatan", icon: <Layers size={22} /> },
     { name: "Kelola Jadwal", path: "/admin/jadwal", icon: <Calendar size={22} /> },
     { name: "Kelola User", path: "/admin/users", icon: <Users size={22} /> },
   ];
 
   const bendaharaLinks = [
     { name: "Dashboard", path: "/bendahara/dashboard", icon: <Home size={22} /> },
-    { name: "Kegiatan & Transaksi", path: "/bendahara/kegiatan", icon: <Activity size={22} /> },
+    { name: "Kegiatan", path: "/bendahara/laporan-kegiatan", icon: <Layers size={22} /> },
     { name: "Kas Anggota", path: "/bendahara/kas-anggota", icon: <UserCheck size={22} /> },
     { name: "Ekskul Robotic", path: "/bendahara/ekskul", icon: <Wallet size={22} /> },
   ];
@@ -107,14 +118,16 @@ export default function Sidebar({ role, isMobileOpen, setIsMobileOpen }: { role:
         }}
       >
         <div style={{ padding: isHovered ? "24px" : "24px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", minHeight: "89px", transition: "padding 0.3s ease" }}>
-          <div style={{ 
-            minWidth: "40px", width: "40px", height: "40px", borderRadius: "10px", 
-            background: "linear-gradient(135deg, var(--primary), var(--accent))",
-            display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "bold",
-            transition: "all 0.3s ease"
-          }}>
-            DRC
-          </div>
+          <img 
+            src="/logo/DRC_logo.png" 
+            alt="DRC Logo" 
+            style={{ 
+              minWidth: "40px", width: "40px", height: "40px", 
+              borderRadius: "8px", 
+              objectFit: "contain",
+              transition: "all 0.3s ease"
+            }} 
+          />
           <h2 style={{ 
             fontSize: "1.2rem", color: "var(--text-main)", fontWeight: "700", 
             opacity: isHovered || isMobileOpen ? 1 : 0, 

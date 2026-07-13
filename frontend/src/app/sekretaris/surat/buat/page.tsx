@@ -323,13 +323,13 @@ export default function BuatSurat() {
   const SectionHeader = ({ title, icon: Icon, sectionKey }: { title: string; icon: any; sectionKey: keyof typeof expandedSections }) => (
     <div
       onClick={() => toggleSection(sectionKey)}
-      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", padding: "12px 16px", borderBottom: expandedSections[sectionKey] ? "1px solid var(--border)" : "none", background: "rgba(0,0,0,0.02)", userSelect: "none" }}
+      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", padding: "16px", borderBottom: expandedSections[sectionKey] ? "1px solid var(--border)" : "none", background: "linear-gradient(to right, rgba(0,0,0,0.02), transparent)", userSelect: "none" }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600", fontSize: "0.9rem", color: "var(--text-main)" }}>
-        <Icon size={16} color="var(--primary)" />
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: "600", fontSize: "0.95rem", color: "var(--text-main)" }}>
+        <Icon size={18} color="var(--primary)" />
         {title}
       </div>
-      {expandedSections[sectionKey] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      {expandedSections[sectionKey] ? <ChevronUp size={18} color="var(--text-muted)" /> : <ChevronDown size={18} color="var(--text-muted)" />}
     </div>
   );
 
@@ -340,9 +340,9 @@ export default function BuatSurat() {
         <h1 style={{ fontSize: "1.4rem", fontWeight: "700", color: "var(--text-main)", marginBottom: "0" }}>Buat Surat</h1>
 
         {/* Pilih Template */}
-        <div className="surface-card" style={{ padding: "0", overflow: "hidden" }}>
-          <div style={{ padding: "12px 16px", fontWeight: "600", fontSize: "0.9rem", color: "var(--text-main)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "8px" }}>
-            <FileText size={16} style={{ color: "var(--primary)" }} /> Pilih Template
+        <div className="surface-card" style={{ padding: "0", overflow: "hidden", borderRadius: "16px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
+          <div style={{ padding: "16px", fontWeight: "600", fontSize: "0.95rem", color: "var(--text-main)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "10px", background: "linear-gradient(to right, rgba(59,130,246,0.05), transparent)" }}>
+            <FileText size={18} style={{ color: "var(--primary)" }} /> Pilih Template
           </div>
           <div style={{ padding: "12px 16px" }}>
             <select className="form-input" value={selectedTemplate?.id || ""} onChange={e => {
@@ -357,7 +357,7 @@ export default function BuatSurat() {
 
         {selectedTemplate && (<>
           {/* Identitas Surat */}
-          <div className="surface-card" style={{ padding: "0", overflow: "hidden" }}>
+          <div className="surface-card" style={{ padding: "0", overflow: "hidden", borderRadius: "16px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
             <SectionHeader title="Identitas Surat" icon={FileText} sectionKey="identitas" />
             {expandedSections.identitas && (
               <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -439,7 +439,7 @@ export default function BuatSurat() {
 
           {/* Pilih Anggota */}
           {selectedTemplate.has_tabel_anggota === 1 && (
-            <div className="surface-card" style={{ padding: "0", overflow: "hidden" }}>
+            <div className="surface-card" style={{ padding: "0", overflow: "hidden", borderRadius: "16px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
               <SectionHeader title={`Pilih Anggota (${selectedUsers.length} terpilih)`} icon={Users} sectionKey="anggota" />
               {expandedSections.anggota && (
                 <div style={{ padding: "12px 16px" }}>
@@ -462,7 +462,7 @@ export default function BuatSurat() {
           )}
 
           {/* Tanda Tangan */}
-          <div className="surface-card" style={{ padding: "0", overflow: "hidden" }}>
+          <div className="surface-card" style={{ padding: "0", overflow: "hidden", borderRadius: "16px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
             <SectionHeader title="Tanda Tangan" icon={PenLine} sectionKey="ttd" />
             {expandedSections.ttd && (
               <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>

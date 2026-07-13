@@ -1,5 +1,6 @@
 const pool = require('../db');
 const bcrypt = require('bcryptjs');
+const xlsx = require('xlsx');
 
 exports.getUsers = async (req, res) => {
     try {
@@ -55,5 +56,98 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+exports.downloadTemplate = (req, res) => {
+    try {
+        const worksheetData = [
+            ['Nama Lengkap', 'Username', 'NIM', 'Email', 'Periode', 'Jabatan', 'Role'],
+            ['Andi Saputra', 'andi.s', 'A11.2023.12345', 'andi@example.com', '2023/2024', 'Anggota', 'user'],
+            ['Budi Santoso', 'budi.s', 'A11.2023.12346', 'budi@example.com', '2023/2024', 'Ketua Divisi', 'user']
+        ];
+        
+        const worksheet = xlsx.utils.aoa_to_sheet(worksheetData);
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, "Format User");
+        
+        // Atur lebar kolom
+        const wscols = [
+            {wch: 25}, {wch: 15}, {wch: 20}, {wch: 25}, {wch: 15}, {wch: 20}, {wch: 15}
+        ];
+        worksheet['!cols'] = wscols;
+
+        const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        
+        res.setHeader('Content-Disposition', 'attachment; filename="Format_Import_User.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(buffer);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Gagal membuat template Excel' });
+    }
+};
+
+exports.importExcel = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Tidak ada file yang diunggah' });
+        }
+
+        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = xlsx.utils.sheet_to_json(worksheet);
+
+        if (data.length === 0) {
+            return res.status(400).json({ message: 'File Excel kosong atau tidak valid' });
+        }
+
+        let importedCount = 0;
+        let errors = [];
+
+        for (const [index, row] of data.entries()) {
+            const namaLengkap = row['Nama Lengkap'] || row['nama_lengkap'];
+            const username = row['Username'] || row['username'];
+            const nim = row['NIM'] || row['nim'] || null;
+            const email = row['Email'] || row['email'] || null;
+            const periode = row['Periode'] || row['periode'] || null;
+            const jabatan = row['Jabatan'] || row['jabatan'] || null;
+            const role = row['Role'] || row['role'] || 'user';
+
+            if (!namaLengkap || !username) {
+                errors.push(`Baris ${index + 2}: Nama Lengkap dan Username wajib diisi`);
+                continue;
+            }
+
+            // Gunakan NIM sebagai password default, atau username jika tidak ada NIM
+            const rawPassword = nim ? String(nim) : String(username);
+            
+            try {
+                const salt = await bcrypt.genSalt(10);
+                const hashedPassword = await bcrypt.hash(rawPassword, salt);
+
+                await pool.query(
+                    'INSERT INTO users (username, password, nama_lengkap, role, nim, email, periode, jabatan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    [username, hashedPassword, namaLengkap, role.toLowerCase(), nim, email, periode, jabatan]
+                );
+                importedCount++;
+            } catch (err) {
+                if (err.code === 'ER_DUP_ENTRY') {
+                    errors.push(`Baris ${index + 2}: Username '${username}' atau Email '${email}' sudah terdaftar`);
+                } else {
+                    errors.push(`Baris ${index + 2}: Terjadi kesalahan server`);
+                }
+            }
+        }
+
+        res.json({
+            message: `Berhasil mengimpor ${importedCount} pengguna.`,
+            errors: errors.length > 0 ? errors : undefined
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Gagal mengimpor file Excel' });
     }
 };

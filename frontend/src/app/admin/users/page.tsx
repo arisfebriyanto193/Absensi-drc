@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Shield, User as UserIcon, Edit, Trash2, X, Save } from "lucide-react";
+import { Shield, User as UserIcon, Edit, Trash2, X, Save, Search, FileDown, Upload } from "lucide-react";
 import Swal from "sweetalert2";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [jabatans, setJabatans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [formData, setFormData] = useState({
     nama_lengkap: "",
@@ -129,17 +133,98 @@ export default function AdminUsers() {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/template?token=${localStorage.getItem("token")}`;
+  };
+
+  const handleImportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importFile) return;
+
+    setImporting(true);
+    const token = localStorage.getItem("token");
+    const importData = new FormData();
+    importData.append("file", importFile);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/import`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+        body: importData
+      });
+      
+      const data = await res.json();
+      setImporting(false);
+      
+      if (res.ok) {
+        setIsImportModalOpen(false);
+        setImportFile(null);
+        if (data.errors && data.errors.length > 0) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Selesai dengan Catatan',
+            html: `${data.message}<br><br><div style="text-align:left; max-height:200px; overflow-y:auto; font-size:0.85rem; color:#ef4444;">${data.errors.join('<br>')}</div>`,
+            confirmButtonColor: 'var(--primary)'
+          });
+        } else {
+          Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message, confirmButtonColor: 'var(--primary)' });
+        }
+        fetchUsers();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || "Gagal mengimpor data", confirmButtonColor: 'var(--primary)' });
+      }
+    } catch (e) {
+      setImporting(false);
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan jaringan', confirmButtonColor: 'var(--primary)' });
+    }
+  };
+
   if (loading) return <div style={{ padding: "40px", textAlign: "center" }}>Loading...</div>;
+
+  const filteredUsers = users.filter((u: any) => 
+    (u.nama_lengkap || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (u.nim || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (u.email || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <>
       <div className="fade-in">
         <div className="surface-card">
-          <h2 style={{ fontSize: "1.5rem", marginBottom: "20px", color: "var(--text-main)", borderBottom: "1px solid var(--border)", paddingBottom: "10px" }}>
-            Kelola Users
-          </h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "10px", flexWrap: "wrap", gap: "10px" }}>
+            <h2 style={{ fontSize: "1.5rem", color: "var(--text-main)", margin: 0 }}>
+              Kelola Users
+            </h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", position: "relative", width: "100%", maxWidth: "300px" }}>
+                <Search size={18} style={{ position: "absolute", left: "12px", color: "var(--text-muted)" }} />
+                <input 
+                  type="text" 
+                  placeholder="Cari nama, NIM..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px 10px 38px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--bg-color)", color: "var(--text-main)", outline: "none", fontSize: "0.9rem" }}
+                />
+              </div>
+              <button 
+                onClick={handleDownloadTemplate}
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 16px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--text-main)", fontWeight: "600", cursor: "pointer", transition: "background 0.2s" }}
+                onMouseOver={e => e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.02)"}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <FileDown size={18} /> Format Excel
+              </button>
+              <button 
+                onClick={() => setIsImportModalOpen(true)}
+                className="btn-primary"
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 16px" }}
+              >
+                <Upload size={18} /> Import Excel
+              </button>
+            </div>
+          </div>
 
-          {users.length > 0 ? (
+          {filteredUsers.length > 0 ? (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
@@ -154,7 +239,7 @@ export default function AdminUsers() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u: any) => (
+                  {filteredUsers.map((u: any) => (
                     <tr key={u.id} style={{ borderBottom: "1px solid var(--border)", transition: "background-color 0.2s", transform: "none" }} className="hover-scale" onMouseOver={e => e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.01)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                       <td style={{ padding: "12px", fontWeight: "500" }}>{u.nama_lengkap}</td>
                       <td style={{ padding: "12px", color: "var(--text-muted)" }}>{u.nim || "-"}</td>
@@ -328,6 +413,66 @@ export default function AdminUsers() {
                 }}
               >
                 <Save size={18} /> Simpan Perubahan
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {isImportModalOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 100,
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+        }}>
+          <div className="fade-in" style={{
+            background: "white", width: "100%", maxWidth: "400px", borderRadius: "20px",
+            padding: "32px", position: "relative",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+          }}>
+            <button 
+              onClick={() => setIsImportModalOpen(false)}
+              style={{ 
+                position: "absolute", top: "24px", right: "24px", background: "#f1f5f9", border: "none", 
+                cursor: "pointer", color: "#64748b", width: "36px", height: "36px", borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" 
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <h2 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+              <Upload size={22} color="var(--primary)" /> Import Data Users
+            </h2>
+
+            <form onSubmit={handleImportSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Pilih File Excel (.xlsx)</label>
+                <input 
+                  type="file" 
+                  accept=".xlsx, .xls"
+                  required
+                  onChange={e => setImportFile(e.target.files ? e.target.files[0] : null)}
+                  style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px dashed #cbd5e1", outline: "none", fontSize: "0.95rem" }}
+                />
+              </div>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: 0 }}>
+                Pastikan Anda telah mengisi data sesuai dengan <b>Format Excel</b> yang disediakan sistem.
+              </p>
+
+              <button 
+                type="submit" 
+                disabled={importing}
+                style={{ 
+                  width: "100%", padding: "14px", marginTop: "12px",
+                  background: importing ? "#94a3b8" : "var(--primary)", color: "white", border: "none", 
+                  borderRadius: "12px", fontWeight: "600", fontSize: "1rem",
+                  cursor: importing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(79, 172, 254, 0.3)"
+                }}
+              >
+                <Upload size={18} /> {importing ? "Mengimpor Data..." : "Mulai Import"}
               </button>
             </form>
           </div>

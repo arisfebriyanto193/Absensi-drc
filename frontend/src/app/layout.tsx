@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Aplikasi Absensi Piket Modern",
 };
 
+import { PeriodeProvider } from "@/context/PeriodeContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -14,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body>
-        {children}
+        <PeriodeProvider>
+          {children}
+        </PeriodeProvider>
       </body>
     </html>
   );

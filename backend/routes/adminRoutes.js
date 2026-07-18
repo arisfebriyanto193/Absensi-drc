@@ -36,6 +36,7 @@ router.delete('/jadwal/:id', adminJadwalController.hapusJadwal);
 router.get('/users', adminUsersController.getUsers);
 router.get('/users/template', adminUsersController.downloadTemplate);
 router.post('/users/import', upload.single('file'), adminUsersController.importExcel);
+router.post('/users', adminUsersController.createUser);
 router.put('/users/:id', adminUsersController.updateUser);
 router.delete('/users/:id', adminUsersController.deleteUser);
 

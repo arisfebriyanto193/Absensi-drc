@@ -31,10 +31,20 @@ exports.login = async (req, res) => {
                 
                 if (siadinResponse.ok && siadinData.message === 'Success') {
                     // SIADIN sukses, cek apakah terdaftar di database DRC
-                    const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role, nim, periode, jabatan FROM users WHERE username = ? OR nim = ?', [username, username]);
+                    const [rows] = await pool.query(`
+                        SELECT u.id, u.username, u.password, u.nama_lengkap, u.nim, u.email,
+                               COALESCE(up.role, 'user') as role, 
+                               up.jabatan,
+                               p.nama_periode as periode,
+                               p.id as periode_id
+                        FROM users u
+                        JOIN (SELECT * FROM periodes WHERE is_active = 1 LIMIT 1) p ON 1=1
+                        JOIN user_periodes up ON u.id = up.user_id AND up.periode_id = p.id
+                        WHERE u.username = ? OR u.nim = ?
+                    `, [username, username]);
                     
                     if (rows.length === 0) {
-                        return res.status(401).json({ message: 'Bukan anggota DRC' });
+                        return res.status(401).json({ message: 'Bukan anggota DRC atau tidak terdaftar pada periode aktif saat ini' });
                     }
                     
                     user = rows[0];
@@ -49,10 +59,20 @@ exports.login = async (req, res) => {
             }
         } else {
             // Opsi 2: Login via Akun DRC (Lokal)
-            const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role, nim, periode, jabatan FROM users WHERE username = ? OR nim = ?', [username, username]);
+            const [rows] = await pool.query(`
+                SELECT u.id, u.username, u.password, u.nama_lengkap, u.nim, u.email,
+                       COALESCE(up.role, 'user') as role, 
+                       up.jabatan,
+                       p.nama_periode as periode,
+                       p.id as periode_id
+                FROM users u
+                JOIN (SELECT * FROM periodes WHERE is_active = 1 LIMIT 1) p ON 1=1
+                JOIN user_periodes up ON u.id = up.user_id AND up.periode_id = p.id
+                WHERE u.username = ? OR u.nim = ?
+            `, [username, username]);
 
             if (rows.length === 0) {
-                return res.status(401).json({ message: 'Bukan anggota DRC' });
+                return res.status(401).json({ message: 'Bukan anggota DRC atau tidak terdaftar pada periode aktif saat ini' });
             }
 
             user = rows[0];
@@ -79,6 +99,7 @@ exports.login = async (req, res) => {
             role: effectiveRole,
             nim: user.nim,
             periode: user.periode,
+            periode_id: user.periode_id,
             jabatan: user.jabatan
         };
 
@@ -117,10 +138,20 @@ exports.loginGoogle = async (req, res) => {
         const email = payload.email;
 
         // Cari user berdasarkan email
-        const [rows] = await pool.query('SELECT id, username, password, nama_lengkap, role, nim, periode, jabatan, email FROM users WHERE email = ?', [email]);
+        const [rows] = await pool.query(`
+            SELECT u.id, u.username, u.password, u.nama_lengkap, u.nim, u.email,
+                   COALESCE(up.role, 'user') as role, 
+                   up.jabatan,
+                   p.nama_periode as periode,
+                   p.id as periode_id
+            FROM users u
+            JOIN (SELECT * FROM periodes WHERE is_active = 1 LIMIT 1) p ON 1=1
+            JOIN user_periodes up ON u.id = up.user_id AND up.periode_id = p.id
+            WHERE u.email = ?
+        `, [email]);
 
         if (rows.length === 0) {
-            return res.status(401).json({ message: 'Email belum terdaftar sebagai anggota DRC. Silakan hubungi admin.' });
+            return res.status(401).json({ message: 'Email belum terdaftar atau Anda tidak terdaftar pada periode aktif saat ini.' });
         }
 
         const user = rows[0];
@@ -142,6 +173,7 @@ exports.loginGoogle = async (req, res) => {
             role: effectiveRole,
             nim: user.nim,
             periode: user.periode,
+            periode_id: user.periode_id,
             jabatan: user.jabatan
         };
 

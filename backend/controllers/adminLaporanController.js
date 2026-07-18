@@ -1,7 +1,15 @@
 const pool = require('../db');
 
+const getPeriodeId = async (req) => {
+    if (req.headers['x-periode-id'] && req.headers['x-periode-id'] !== 'all') return req.headers['x-periode-id'];
+    if (req.query.periode_id && req.query.periode_id !== 'all') return req.query.periode_id;
+    const [active] = await pool.query('SELECT id FROM periodes WHERE is_active = 1 LIMIT 1');
+    return active.length > 0 ? active[0].id : null;
+};
+
 exports.getLaporan = async (req, res) => {
   try {
+    const pId = await getPeriodeId(req);
     const { bulan, tahun } = req.query;
     
     // Default ke bulan dan tahun sekarang jika tidak dikirim
@@ -21,13 +29,14 @@ exports.getLaporan = async (req, res) => {
         j.lokasi,
         a.status_konfirmasi as status_absen
       FROM users u
-      LEFT JOIN jadwal_piket j ON u.id = j.user_id AND DATE_FORMAT(j.tanggal, '%Y-%m') = ?
+      INNER JOIN user_periodes up ON u.id = up.user_id
+      LEFT JOIN jadwal_piket j ON u.id = j.user_id AND DATE_FORMAT(j.tanggal, '%Y-%m') = ? AND j.periode_id = up.periode_id
       LEFT JOIN absensi a ON j.id = a.jadwal_id
-      WHERE u.role = 'user'
+      WHERE up.periode_id = ? AND up.role = 'user'
       ORDER BY u.nama_lengkap ASC, j.tanggal ASC;
     `;
 
-    const [rows] = await pool.query(query, [yearMonth]);
+    const [rows] = await pool.query(query, [yearMonth, pId]);
 
     // Grouping data di Node.js
     const laporanMap = {};

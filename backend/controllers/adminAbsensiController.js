@@ -1,16 +1,24 @@
 const pool = require('../db');
 const dayjs = require('dayjs');
 
+const getPeriodeId = async (req) => {
+    if (req.headers['x-periode-id'] && req.headers['x-periode-id'] !== 'all') return req.headers['x-periode-id'];
+    if (req.query.periode_id && req.query.periode_id !== 'all') return req.query.periode_id;
+    const [active] = await pool.query('SELECT id FROM periodes WHERE is_active = 1 LIMIT 1');
+    return active.length > 0 ? active[0].id : null;
+};
+
 exports.getAbsensiPending = async (req, res) => {
     try {
+        const pId = await getPeriodeId(req);
         const [absensi] = await pool.query(`
             SELECT a.*, u.nama_lengkap, DATE_FORMAT(j.tanggal, '%Y-%m-%d') AS tanggal, j.lokasi 
             FROM absensi a 
             JOIN users u ON a.user_id = u.id 
             JOIN jadwal_piket j ON a.jadwal_id = j.id 
-            WHERE a.status_konfirmasi = 'pending'
+            WHERE a.status_konfirmasi = 'pending' AND a.periode_id = ?
             ORDER BY a.created_at DESC
-        `);
+        `, [pId]);
         res.json(absensi);
     } catch (error) {
         console.error(error);

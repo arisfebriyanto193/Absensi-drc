@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
+import PeriodeSelector from "./PeriodeSelector";
 
 export default function Topbar({ title, user, setIsMobileOpen }: { title: string, user: any, setIsMobileOpen?: any }) {
   return (
@@ -25,7 +26,8 @@ export default function Topbar({ title, user, setIsMobileOpen }: { title: string
         <h1 className="topbar-title" style={{ fontSize: "1.5rem", color: "var(--text-main)" }}>{title}</h1>
       </div>
       
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+        <PeriodeSelector />
         <div style={{ textAlign: "right" }}>
           <p style={{ fontWeight: "600", fontSize: "0.95rem" }}>{user?.nama_lengkap || "User"}</p>
           <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "capitalize" }}>{user?.role || "user"}</p>

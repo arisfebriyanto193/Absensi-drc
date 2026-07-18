@@ -1,17 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Shield, User as UserIcon, Edit, Trash2, X, Save, Search, FileDown, Upload } from "lucide-react";
+import { Shield, User as UserIcon, Edit, Trash2, X, Save, Search, FileDown, Upload, Plus } from "lucide-react";
 import Swal from "sweetalert2";
+import { usePeriode } from "@/context/PeriodeContext";
 
 export default function AdminUsers() {
+  const { selectedPeriodeId } = usePeriode();
   const [users, setUsers] = useState<any[]>([]);
+  const [allOldUsers, setAllOldUsers] = useState<any[]>([]);
   const [jabatans, setJabatans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isPeriodeModalOpen, setIsPeriodeModalOpen] = useState(false);
+  const [newPeriodeName, setNewPeriodeName] = useState("");
+  const [selectedUsersForPeriode, setSelectedUsersForPeriode] = useState<number[]>([]);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -27,9 +34,15 @@ export default function AdminUsers() {
   });
 
   const fetchUsers = () => {
+    if (!selectedPeriodeId) return;
     const token = localStorage.getItem("token");
+    
+    // Fetch users for current selected periode
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { 
+        "Authorization": `Bearer ${token}`,
+        "x-periode-id": selectedPeriodeId
+      }
     })
     .then(res => res.json())
     .then(data => {
@@ -40,6 +53,19 @@ export default function AdminUsers() {
       console.error(err);
       setLoading(false);
     });
+
+    // Fetch ALL users ever (for the dropdown)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
+      headers: { 
+        "Authorization": `Bearer ${token}`,
+        "x-periode-id": "all"
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) setAllOldUsers(data);
+    })
+    .catch(err => console.error(err));
   };
 
   const fetchJabatans = () => {
@@ -57,7 +83,7 @@ export default function AdminUsers() {
   useEffect(() => {
     fetchUsers();
     fetchJabatans();
-  }, []);
+  }, [selectedPeriodeId]);
 
   const handleEditClick = (user: any) => {
     setSelectedUser(user);
@@ -72,6 +98,26 @@ export default function AdminUsers() {
       password: "" // password field starts empty, only changed if user types
     });
     setIsEditModalOpen(true);
+  };
+
+  const handleAddClick = () => {
+    setFormData({
+      nama_lengkap: "",
+      nim: "",
+      username: "",
+      email: "",
+      periode: "",
+      jabatan: "",
+      role: "user",
+      password: ""
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handlePeriodeBaruClick = () => {
+    setNewPeriodeName("");
+    setSelectedUsersForPeriode(users.map((u: any) => u.id)); // Default select all current users
+    setIsPeriodeModalOpen(true);
   };
 
   const handleDeleteClick = async (id: number) => {
@@ -133,8 +179,51 @@ export default function AdminUsers() {
     }
   };
 
-  const handleDownloadTemplate = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/template?token=${localStorage.getItem("token")}`;
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
+        method: "POST",
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'User berhasil ditambahkan!', confirmButtonColor: 'var(--primary)' });
+        setIsAddModalOpen(false);
+        fetchUsers();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || "Gagal menambahkan user", confirmButtonColor: 'var(--primary)' });
+      }
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan jaringan', confirmButtonColor: 'var(--primary)' });
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/template`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Gagal mengunduh");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Format_Import_User.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal mengunduh format excel', confirmButtonColor: 'var(--primary)' });
+    }
   };
 
   const handleImportSubmit = async (e: React.FormEvent) => {
@@ -175,6 +264,47 @@ export default function AdminUsers() {
       }
     } catch (e) {
       setImporting(false);
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan jaringan', confirmButtonColor: 'var(--primary)' });
+    }
+  };
+
+  const handlePeriodeBaruSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPeriodeName) return;
+
+    const token = localStorage.getItem("token");
+    
+    // Map selected ids back to user objects
+    const usersToMigrate = users
+      .filter((u: any) => selectedUsersForPeriode.includes(u.id))
+      .map((u: any) => ({
+        id: u.id,
+        role: u.role,
+        jabatan: u.jabatan
+      }));
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/periodes/transition`, {
+        method: "POST",
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nama_periode: newPeriodeName,
+          users: usersToMigrate
+        })
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Periode baru berhasil dimulai!', confirmButtonColor: 'var(--primary)' }).then(() => {
+          window.location.reload(); // Reload to refresh context state across app
+        });
+      } else {
+        Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || "Gagal memulai periode baru", confirmButtonColor: 'var(--primary)' });
+      }
+    } catch (e) {
       Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan jaringan', confirmButtonColor: 'var(--primary)' });
     }
   };
@@ -220,6 +350,20 @@ export default function AdminUsers() {
                 style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 16px" }}
               >
                 <Upload size={18} /> Import Excel
+              </button>
+              <button 
+                onClick={handlePeriodeBaruClick}
+                className="btn-primary"
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 16px", backgroundColor: "#f59e0b", borderColor: "#f59e0b" }}
+              >
+                <Plus size={18} /> Mulai Periode Baru
+              </button>
+              <button 
+                onClick={handleAddClick}
+                className="btn-primary"
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 16px", backgroundColor: "#10b981", borderColor: "#10b981" }}
+              >
+                <Plus size={18} /> Tambah User
               </button>
             </div>
           </div>
@@ -473,6 +617,249 @@ export default function AdminUsers() {
                 }}
               >
                 <Upload size={18} /> {importing ? "Mengimpor Data..." : "Mulai Import"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {isAddModalOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 100,
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+        }}>
+          <div className="fade-in" style={{
+            background: "white", width: "100%", maxWidth: "500px", borderRadius: "20px",
+            padding: "32px", maxHeight: "90vh", overflowY: "auto", position: "relative",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+          }}>
+            <button 
+              onClick={() => setIsAddModalOpen(false)}
+              style={{ 
+                position: "absolute", top: "24px", right: "24px", background: "#f1f5f9", border: "none", 
+                cursor: "pointer", color: "#64748b", width: "36px", height: "36px", borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" 
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <h2 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+              <Plus size={22} color="#10b981" /> Tambah User Baru
+            </h2>
+
+            <div style={{ marginBottom: "20px", padding: "16px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "8px", color: "#334155" }}>
+                Atau Ambil dari Anggota Lama (Opsional)
+              </label>
+              <select 
+                onChange={(e) => {
+                  const u = allOldUsers.find((user) => user.id === parseInt(e.target.value));
+                  if (u) {
+                    setFormData({
+                      ...formData,
+                      nama_lengkap: u.nama_lengkap || "",
+                      username: u.username || "",
+                      nim: u.nim || "",
+                      email: u.email || "",
+                      jabatan: u.jabatan || "",
+                      role: u.role || "user",
+                      password: "" // Keep empty so admin can set new password or leave blank
+                    });
+                  } else {
+                    setFormData({ ...formData, nama_lengkap: "", username: "", nim: "", email: "", jabatan: "", role: "user", password: "" });
+                  }
+                }}
+                style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", backgroundColor: "white", outline: "none" }}
+              >
+                <option value="">-- Ketik manual, atau pilih dari sini --</option>
+                {Array.from(new Map(allOldUsers.filter(ou => !users.some(cu => cu.id === ou.id)).map(u => [u.id, u])).values()).map((ou: any) => (
+                  <option key={ou.id} value={ou.id}>{ou.nama_lengkap} ({ou.username})</option>
+                ))}
+              </select>
+            </div>
+
+            <form onSubmit={handleAddSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Nama Lengkap *</label>
+                <input 
+                  type="text" required value={formData.nama_lengkap} 
+                  onChange={e => setFormData({...formData, nama_lengkap: e.target.value})}
+                  style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Username *</label>
+                  <input 
+                    type="text" required value={formData.username} 
+                    onChange={e => setFormData({...formData, username: e.target.value})}
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem" }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>NIM</label>
+                  <input 
+                    type="text" value={formData.nim} 
+                    onChange={e => setFormData({...formData, nim: e.target.value})}
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem" }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Email</label>
+                <input 
+                  type="email" value={formData.email} 
+                  onChange={e => setFormData({...formData, email: e.target.value})}
+                  style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Periode</label>
+                  <input 
+                    type="text" value={formData.periode} 
+                    placeholder="Contoh: 2024/2025"
+                    onChange={e => setFormData({...formData, periode: e.target.value})}
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem" }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Jabatan</label>
+                  <select 
+                    value={formData.jabatan} 
+                    onChange={e => setFormData({...formData, jabatan: e.target.value})}
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem", backgroundColor: "white" }}
+                  >
+                    <option value="">Pilih Jabatan</option>
+                    {jabatans.map((jab) => (
+                      <option key={jab.id} value={jab.nama_jabatan}>{jab.nama_jabatan}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Role *</label>
+                  <select 
+                    value={formData.role} 
+                    onChange={e => setFormData({...formData, role: e.target.value})}
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem", backgroundColor: "white" }}
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="bendahara">Bendahara</option>
+                    <option value="sekretaris">Sekretaris</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Password (Kosongkan jika user lama)</label>
+                  <input 
+                    type="password" value={formData.password} 
+                    onChange={e => setFormData({...formData, password: e.target.value})}
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem" }}
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                style={{ 
+                  width: "100%", padding: "14px", marginTop: "12px",
+                  background: "#10b981", color: "white", border: "none", 
+                  borderRadius: "12px", fontWeight: "600", fontSize: "1rem",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(16, 185, 129, 0.3)"
+                }}
+              >
+                <Save size={18} /> Tambah User
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Mulai Periode Baru Modal */}
+      {isPeriodeModalOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 100,
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+        }}>
+          <div className="fade-in" style={{
+            background: "white", width: "100%", maxWidth: "500px", borderRadius: "20px",
+            padding: "32px", maxHeight: "90vh", overflowY: "auto", position: "relative",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+          }}>
+            <button 
+              onClick={() => setIsPeriodeModalOpen(false)}
+              style={{ 
+                position: "absolute", top: "24px", right: "24px", background: "#f1f5f9", border: "none", 
+                cursor: "pointer", color: "#64748b", width: "36px", height: "36px", borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" 
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <h2 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
+              <Plus size={22} color="#f59e0b" /> Mulai Periode Baru
+            </h2>
+
+            <form onSubmit={handlePeriodeBaruSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Tahun Periode Baru *</label>
+                <input 
+                  type="text" required value={newPeriodeName} 
+                  placeholder="Contoh: 2025/2026"
+                  onChange={e => setNewPeriodeName(e.target.value)}
+                  style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.95rem" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#475569" }}>Pilih Anggota Aktif</label>
+                <div style={{ maxHeight: "200px", overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "8px" }}>
+                  {users.map((u: any) => (
+                    <label key={u.id} style={{ display: "flex", alignItems: "center", padding: "8px", cursor: "pointer", borderBottom: "1px solid #f1f5f9" }}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedUsersForPeriode.includes(u.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedUsersForPeriode([...selectedUsersForPeriode, u.id]);
+                          } else {
+                            setSelectedUsersForPeriode(selectedUsersForPeriode.filter(id => id !== u.id));
+                          }
+                        }}
+                        style={{ marginRight: "12px", width: "16px", height: "16px", cursor: "pointer" }}
+                      />
+                      <div>
+                        <div style={{ fontSize: "0.9rem", fontWeight: "500", color: "#334155" }}>{u.nama_lengkap}</div>
+                        <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{u.jabatan || 'Anggota'}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                style={{ 
+                  width: "100%", padding: "14px", marginTop: "12px",
+                  background: "#f59e0b", color: "white", border: "none", 
+                  borderRadius: "12px", fontWeight: "600", fontSize: "1rem",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(245, 158, 11, 0.3)"
+                }}
+              >
+                <Save size={18} /> Simpan & Mulai Periode
               </button>
             </form>
           </div>

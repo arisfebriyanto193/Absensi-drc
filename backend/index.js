@@ -35,6 +35,7 @@ app.use('/api/peminjaman', peminjamanUserRoutes);
 app.use('/api/admin/kegiatan', kegiatanAdminRoutes);
 app.use('/api/kegiatan', kegiatanUserRoutes);
 app.use('/api/bendahara/laporan-kegiatan', kegiatanBendaharaRoutes);
+app.use('/api/periodes', require('./routes/periodeRoutes'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
